@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.englishstudy.mapper.WordSynonymsMapper">
+    <!-- 目前无自定义 SQL 语句 -->
+
+
+    <select id="getSynonymsByWordId" resultType="com.example.englishstudy.entity.WordSynonyms">
+        SELECT synonym_word, synonym_word_trans
+        FROM word_synonyms WHERE word_id = #{wordId}
+    </select>
+
+
+</mapper>

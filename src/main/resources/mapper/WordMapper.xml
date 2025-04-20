@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.englishstudy.mapper.WordMapper">
+    <!-- 根据单词名称查询单词信息，包含词性、词义、例句、例句翻译、短语和短语翻译 -->
+
+</mapper>
