@@ -1,14 +1,15 @@
 package com.example.englishstudy.serviceimpl;
 
-
 import com.example.englishstudy.entity.Word;
-
 import com.example.englishstudy.mapper.WordMapper;
 import com.example.englishstudy.service.WordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,25 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
 
     private static final Logger logger = LoggerFactory.getLogger(WordServiceImpl.class);
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+
     @Override
     public Word getWordById(Integer wordId) {
+        String key = "word:id:" + wordId;
+        Word word = (Word) redisTemplate.opsForValue().get(key);
+        if (word != null) {
+            logger.info("从 Redis 缓存中获取单词信息: wordId={}", wordId);
+            return word;
+        }
         try {
             logger.info("尝试获取单词信息: wordId={}", wordId);
-            Word word = this.baseMapper.getWordByWordId(wordId);
+            word = this.baseMapper.getWordByWordId(wordId);
+            if (word != null) {
+                redisTemplate.opsForValue().set(key, word, 30, TimeUnit.MINUTES);
+                logger.info("将单词信息存入 Redis 缓存: wordId={}", wordId);
+            }
             logger.info("获取单词信息成功: wordId={}, 返回数据: {}", wordId, word);
             return word;
         } catch (Exception e) {
@@ -32,23 +47,43 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
     }
 
     @Override
-    public Word getWordByWord(String word) {
+    public Word getWordByWord(String wordStr) {
+        String key = "word:str:" + wordStr;
+        Word word = (Word) redisTemplate.opsForValue().get(key);
+        if (word != null) {
+            logger.info("从 Redis 缓存中获取单词信息: word={}", wordStr);
+            return word;
+        }
         try {
-            logger.info("尝试获取单词信息: word={}", word);
-            Word result = this.baseMapper.getWordByWord(word);
-            logger.info("获取单词信息成功: word={}, 返回数据: {}", word, result);
-            return result;
+            logger.info("尝试获取单词信息: word={}", wordStr);
+            word = this.baseMapper.getWordByWord(wordStr);
+            if (word != null) {
+                redisTemplate.opsForValue().set(key, word, 30, TimeUnit.MINUTES);
+                logger.info("将单词信息存入 Redis 缓存: word={}", wordStr);
+            }
+            logger.info("获取单词信息成功: word={}, 返回数据: {}", wordStr, word);
+            return word;
         } catch (Exception e) {
-            logger.error("根据单词获取信息失败, word: {}", word, e);
+            logger.error("根据单词获取信息失败, word: {}", wordStr, e);
             return null;
         }
     }
 
     @Override
     public List<String> getAllDistinctBookIds() {
+        String key = "bookIds:allDistinct";
+        List<String> bookIds = (List<String>) redisTemplate.opsForValue().get(key);
+        if (bookIds != null) {
+            logger.info("从 Redis 缓存中获取所有不同的书籍ID");
+            return bookIds;
+        }
         try {
             logger.info("尝试获取所有不同的书籍ID");
-            List<String> bookIds = this.baseMapper.getAllDistinctBookIds();
+            bookIds = this.baseMapper.getAllDistinctBookIds();
+            if (bookIds != null) {
+                redisTemplate.opsForValue().set(key, bookIds, 30, TimeUnit.MINUTES);
+                logger.info("将所有不同的书籍ID存入 Redis 缓存");
+            }
             logger.info("获取所有不同书籍ID成功, 返回数据: {}", bookIds);
             return bookIds;
         } catch (Exception e) {
@@ -59,9 +94,19 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
 
     @Override
     public int getWordCountByBookId(String bookId) {
+        String key = "wordCount:bookId:" + bookId;
+        Integer count = (Integer) redisTemplate.opsForValue().get(key);
+        if (count != null) {
+            logger.info("从 Redis 缓存中获取书籍ID {} 的单词数量", bookId);
+            return count;
+        }
         try {
             logger.info("尝试获取书籍ID {} 的单词数量", bookId);
-            int count = this.baseMapper.getWordCountByBookId(bookId);
+            count = this.baseMapper.getWordCountByBookId(bookId);
+            if (count != null) {
+                redisTemplate.opsForValue().set(key, count, 30, TimeUnit.MINUTES);
+                logger.info("将书籍ID {} 的单词数量存入 Redis 缓存", bookId);
+            }
             logger.info("获取书籍单词数量成功: bookId={}, 返回数量: {}", bookId, count);
             return count;
         } catch (Exception e) {
@@ -70,12 +115,21 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
         }
     }
 
-
     @Override
     public int getWordCountByBookIdPrefix(String bookIdPrefix) {
+        String key = "wordCount:bookIdPrefix:" + bookIdPrefix;
+        Integer count = (Integer) redisTemplate.opsForValue().get(key);
+        if (count != null) {
+            logger.info("从 Redis 缓存中获取书籍ID前缀为 {} 的单词数量", bookIdPrefix);
+            return count;
+        }
         try {
             logger.info("尝试获取书籍ID前缀为 {} 的单词数量", bookIdPrefix);
-            int count = this.baseMapper.getWordCountByBookIdPrefix(bookIdPrefix);
+            count = this.baseMapper.getWordCountByBookIdPrefix(bookIdPrefix);
+            if (count != null) {
+                redisTemplate.opsForValue().set(key, count, 30, TimeUnit.MINUTES);
+                logger.info("将书籍ID前缀为 {} 的单词数量存入 Redis 缓存", bookIdPrefix);
+            }
             logger.info("获取书籍单词数量成功: 前缀为bookId={}, 返回数量: {}", bookIdPrefix, count);
             return count;
         } catch (Exception e) {
@@ -84,12 +138,21 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
         }
     }
 
-
     @Override
     public List<String> getWordsByBookId(String bookId) {
+        String key = "words:bookId:" + bookId;
+        List<String> words = (List<String>) redisTemplate.opsForValue().get(key);
+        if (words != null) {
+            logger.info("从 Redis 缓存中获取书籍ID {} 的单词列表", bookId);
+            return words;
+        }
         try {
             logger.info("尝试获取书籍ID {} 的单词列表", bookId);
-            List<String> words = this.baseMapper.getWordsByBookId(bookId);
+            words = this.baseMapper.getWordsByBookId(bookId);
+            if (words != null) {
+                redisTemplate.opsForValue().set(key, words, 30, TimeUnit.MINUTES);
+                logger.info("将书籍ID {} 的单词列表存入 Redis 缓存", bookId);
+            }
             logger.info("获取书籍单词列表成功: bookId={}, 返回单词数量: {}", bookId, words != null ? words.size() : 0);
             return words;
         } catch (Exception e) {
@@ -100,9 +163,19 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
 
     @Override
     public List<String> getWordsByBookIdPrefix(String bookIdPrefix) {
+        String key = "words:bookIdPrefix:" + bookIdPrefix;
+        List<String> words = (List<String>) redisTemplate.opsForValue().get(key);
+        if (words != null) {
+            logger.info("从 Redis 缓存中获取书籍ID前缀为 {} 的单词列表", bookIdPrefix);
+            return words;
+        }
         try {
             logger.info("尝试获取书籍ID前缀为 {} 的单词列表", bookIdPrefix);
-            List<String> words = this.baseMapper.getWordsByBookIdPrefix(bookIdPrefix);
+            words = this.baseMapper.getWordsByBookIdPrefix(bookIdPrefix);
+            if (words != null) {
+                redisTemplate.opsForValue().set(key, words, 30, TimeUnit.MINUTES);
+                logger.info("将书籍ID前缀为 {} 的单词列表存入 Redis 缓存", bookIdPrefix);
+            }
             logger.info("获取书籍单词列表成功: 前缀为bookId={}, 返回单词数量: {}", bookIdPrefix, words != null ? words.size() : 0);
             return words;
         } catch (Exception e) {
@@ -117,28 +190,44 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
         return this.lambdaQuery().eq(Word::getWord, word).exists();
     }
 
-
-
-
-
     @Override
     public List<String> searchByPrefix(String prefix, int limit) {
-
-        logger.info("尝试补全");
-        // 确保前缀小写（根据需求调整）
-        String searchPrefix = prefix.toLowerCase() + "%";
-
-        // 方案1：使用自定义Mapper方法
-        return baseMapper.searchByPrefix(searchPrefix, limit);
-
-
+        String key = "words:searchByPrefix:" + prefix + ":" + limit;
+        List<String> words = (List<String>) redisTemplate.opsForValue().get(key);
+        if (words != null) {
+            logger.info("从 Redis 缓存中获取前缀为 {} 且限制为 {} 的单词列表", prefix, limit);
+            return words;
+        }
+        try {
+            logger.info("尝试补全");
+            String searchPrefix = prefix.toLowerCase() + "%";
+            words = this.baseMapper.searchByPrefix(searchPrefix, limit);
+            if (words != null) {
+                redisTemplate.opsForValue().set(key, words, 30, TimeUnit.MINUTES);
+                logger.info("将前缀为 {} 且限制为 {} 的单词列表存入 Redis 缓存", prefix, limit);
+            }
+            return words;
+        } catch (Exception e) {
+            logger.error("根据前缀获取单词列表失败, prefix: {}, limit: {}", prefix, limit, e);
+            return null;
+        }
     }
 
     @Override
     public List<String> getAllWords() {
+        String key = "words:all";
+        List<String> words = (List<String>) redisTemplate.opsForValue().get(key);
+        if (words != null) {
+            logger.info("从 Redis 缓存中获取所有单词");
+            return words;
+        }
         try {
             logger.info("尝试获取所有单词");
-            List<String> words = this.baseMapper.getAllWords();
+            words = this.baseMapper.getAllWords();
+            if (words != null) {
+                redisTemplate.opsForValue().set(key, words, 30, TimeUnit.MINUTES);
+                logger.info("将所有单词存入 Redis 缓存");
+            }
             logger.info("获取所有单词成功, 返回单词数量: {}", words != null ? words.size() : 0);
             return words;
         } catch (Exception e) {
@@ -146,6 +235,4 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
             return null;
         }
     }
-
-
 }

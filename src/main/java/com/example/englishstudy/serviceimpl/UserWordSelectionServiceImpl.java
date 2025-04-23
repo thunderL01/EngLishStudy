@@ -156,11 +156,13 @@ public class UserWordSelectionServiceImpl extends ServiceImpl<UserWordSelectionM
                 .eq("date", LocalDate.now())
                 .eq("status", 1);
 
-        int count = (int) this.count(statusQuery);
+        int alreadySelectedCount = (int) this.count(statusQuery);
 
-        if (count >= dailyStudyAmount) {
+        // 修改这里：计算还能选择的新单词数量
+        int remainingAmount = Math.max(0, dailyStudyAmount - alreadySelectedCount);
+        if (remainingAmount <= 0) {
             logger.info("用户今天已经添加了足够的单词，不能再添加，用户 ID: {}, 已添加数量: {}, 每日学习量: {}",
-                    userId, count, dailyStudyAmount);
+                    userId, alreadySelectedCount, dailyStudyAmount);
             return Collections.emptyList();
         }
 
@@ -169,8 +171,8 @@ public class UserWordSelectionServiceImpl extends ServiceImpl<UserWordSelectionM
             // 获取当天需要复习的单词数量
             int reviewAmount = getReviewAmountByUserId(userId, dailyStudyAmount);
 
-            // 计算新学单词的数量
-            int newLearningAmount = Math.max(0, dailyStudyAmount - reviewAmount);
+            // 计算新学单词的数量（不能超过剩余可学数量）
+            int newLearningAmount = Math.min(Math.max(0, dailyStudyAmount - reviewAmount), remainingAmount);
 
             if(newLearningAmount == 0){
                 logger.info("单词已选择完毕，请勿重复添加（若需要添加则请提高每日学习量）");

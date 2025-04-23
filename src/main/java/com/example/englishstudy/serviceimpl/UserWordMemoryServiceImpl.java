@@ -62,7 +62,9 @@ public class UserWordMemoryServiceImpl extends ServiceImpl<UserWordMemoryMapper,
             queryWrapper.eq(UserWordStudyStatus::getUserId, userId)
                     .eq(UserWordStudyStatus::getWordId, wordId)
                     .le(UserWordStudyStatus::getStudyDate, studyDate)
-                    .eq(UserWordStudyStatus::getIsCompleted, true);
+                    .eq(UserWordStudyStatus::getIsCompleted, true)
+                    .orderByDesc(UserWordStudyStatus::getStudyDate)
+                    .last("limit 1");
 
             long count = statusMapper.selectCount(queryWrapper);
             if (count > 0) {

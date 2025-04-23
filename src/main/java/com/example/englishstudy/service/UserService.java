@@ -91,8 +91,7 @@ public interface UserService extends IService<User> {
      * 设置每日学习和复习量
      * 注：此方法应检查每日学习量和复习量是否超过设定范围
      * @param userId 用户 ID
-     * @param dailyLearningAmount 每日学习量
-     * @param dailyReviewAmount 每日复习量
+     * @param dailyStudyAmount 每日学习量
      * @return 设置成功返回 true，否则返回 false
      */
     boolean updateUserLearningSettings(Integer userId, Integer dailyStudyAmount);

@@ -141,7 +141,9 @@ public class UserWordStudyStatusServiceImpl extends ServiceImpl<UserWordStudySta
         QueryWrapper<UserWordStudyStatus> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId)
                 .eq("word_id", wordId)
-                .eq("is_completed", false);
+                .eq("is_completed", false)
+                .le("user_word_study_status_date", LocalDate.now()); // 添加小于等于今天的日期条件
+
         return this.getOne(queryWrapper);
     }
 
