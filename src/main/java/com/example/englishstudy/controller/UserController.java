@@ -5,9 +5,12 @@ import com.example.englishstudy.entity.User;
 import com.example.englishstudy.enums.AppearanceMode;
 import com.example.englishstudy.enums.LearningMode;
 import com.example.englishstudy.service.UserService;
+import com.example.englishstudy.utils.LoginResult;
 import com.example.englishstudy.utils.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.englishstudy.utils.JwtUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -22,14 +25,19 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/register/wechat")
-    public Result<User> registerByWeChat(
+    public Result<LoginResult> registerByWeChat(
             @RequestParam("code") String code,
             @RequestParam("nickName") String nickName) {
         User user = userService.registerUserByWeChat(code, nickName);
         if (user != null) {
-            return Result.success(user);
+            // 生成 JWT
+            String token = jwtUtils.generateToken(user.getWechatOpenid());
+            LoginResult loginResult = new LoginResult(user, token);
+            return Result.success(loginResult);
         } else {
             return Result.error(Result.Code.INTERNAL_SERVER_ERROR, "微信登录失败");
         }

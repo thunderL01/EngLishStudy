@@ -282,6 +282,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public boolean updateUserInformation(Integer userId, Integer age, String gender, String phone, LocalDate birthday) {
+        logger.info("尝试更新用户信息: userId={}", userId);
         if (userId == null) {
             logger.warn("更新用户信息失败: 用户ID为空");
             return false;

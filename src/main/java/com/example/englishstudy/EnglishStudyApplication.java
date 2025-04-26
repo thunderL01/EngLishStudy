@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @MapperScan("com.example.englishstudy.mapper")
 @EnableAspectJAutoProxy(exposeProxy = true) // 开启暴露代理对象
 @EnableAsync
-@EnableCaching
 public class EnglishStudyApplication {
 
     public static void main(String[] args) {

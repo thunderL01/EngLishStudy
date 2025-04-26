@@ -2,11 +2,15 @@ package com.example.englishstudy.utils;
 
 
 import lombok.Data;
+import lombok.Getter;
 
 @Data
 public class Result<T> {
+
     private int code;    // 状态码
+
     private String msg;  // 返回消息
+
     private T data;      // 返回数据
 
     public static <T> Result<T> success(T data) {
@@ -34,6 +38,7 @@ public class Result<T> {
 
 
     // 状态码枚举
+    @Getter
     public enum Code {
         SUCCESS(200, "操作成功"),
         BAD_REQUEST(400, "请求参数错误"),
@@ -49,5 +54,7 @@ public class Result<T> {
             this.code = code;
             this.msg = msg;
         }
+
     }
+
 }

@@ -46,24 +46,42 @@ public class WordServiceImpl extends ServiceImpl<WordMapper, Word> implements Wo
         }
     }
 
+    //具体解析redis的使用
     @Override
     public Word getWordByWord(String wordStr) {
+        // 1. 生成 Redis 缓存的键
         String key = "word:str:" + wordStr;
+
+        // 2. 尝试从 Redis 缓存中获取单词信息
         Word word = (Word) redisTemplate.opsForValue().get(key);
+
+        // 3. 检查缓存中是否存在该单词信息
         if (word != null) {
+            // 如果存在，记录日志并返回该单词信息
             logger.info("从 Redis 缓存中获取单词信息: word={}", wordStr);
             return word;
         }
+
+        // 4. 如果缓存中不存在该单词信息，尝试从数据库中查询
         try {
+            // 记录尝试获取单词信息的日志
             logger.info("尝试获取单词信息: word={}", wordStr);
+            // 调用 BaseMapper 的方法从数据库中查询单词信息
             word = this.baseMapper.getWordByWord(wordStr);
+
+            // 5. 检查数据库中是否查询到该单词信息
             if (word != null) {
+                // 如果查询到，将该单词信息存入 Redis 缓存，并设置过期时间为 30 分钟
                 redisTemplate.opsForValue().set(key, word, 30, TimeUnit.MINUTES);
+                // 记录将单词信息存入 Redis 缓存的日志
                 logger.info("将单词信息存入 Redis 缓存: word={}", wordStr);
             }
+            // 记录获取单词信息成功的日志
             logger.info("获取单词信息成功: word={}, 返回数据: {}", wordStr, word);
+            // 返回查询到的单词信息
             return word;
         } catch (Exception e) {
+            // 6. 如果在查询过程中出现异常，记录错误日志并返回 null
             logger.error("根据单词获取信息失败, word: {}", wordStr, e);
             return null;
         }
